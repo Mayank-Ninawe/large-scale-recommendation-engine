@@ -1,0 +1,22 @@
+Item-Based Collaborative Filtering Evaluation
+================================================
+Candidate catalog size: 11,464
+Relevant test rating: >= 4.0
+Seen training items are excluded from recommendations
+Both methods use the same evaluated user cohort
+K: 10
+Evaluated users: 150,626
+Users skipped (no positive training history): 90
+Users skipped (no eligible relevant test items): 0
+
+Popularity baseline:
+Recall@10: 0.024811
+NDCG@10: 0.020305
+
+Item-based collaborative filtering:
+Recall@10: 0.081949
+NDCG@10: 0.070637
+
+Difference (item similarity - popularity):
+Recall@10: +0.057138
+NDCG@10: +0.050332
