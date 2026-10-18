@@ -1,0 +1,7 @@
+Popularity Baseline Evaluation
+===================================
+Relevance threshold: rating >= 4.0
+K: 10
+Evaluated users: 150,927
+Recall@10: 0.019805
+NDCG@10: 0.015658
