@@ -1,0 +1,8 @@
+MovieLens 25M Dataset Audit
+===================================
+total_ratings: 25,000,095
+unique_users: 162,541
+unique_rated_movies: 59,047
+total_movies: 62,423
+missing_rating_values: 0
+duplicate_movie_ids: 0
