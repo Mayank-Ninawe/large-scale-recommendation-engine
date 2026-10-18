@@ -1,0 +1,9 @@
+Improved Popularity Baseline Evaluation
+==========================================
+Protocol: training-catalog, unseen relevant test items
+Relevance threshold: rating >= 4.0
+K: 10
+Training catalog movies: 51,231
+Evaluated users: 150,921
+Recall@10: 0.024654
+NDCG@10: 0.020256
