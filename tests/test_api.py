@@ -101,10 +101,8 @@ def test_personalized_recommendations_exclude_rated_movies():
 
     from backend.main import load_user_histories
 
-    ratings = load_user_histories()
-    rated_ids = set(
-        ratings.loc[ratings["userId"] == 1, "movieId"].tolist()
-    )
+    ratings = load_user_histories(1)
+    rated_ids = set(ratings["movieId"].tolist())    
     recommended_ids = {
         movie["movieId"] for movie in data["recommendations"]
     }

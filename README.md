@@ -1,4 +1,4 @@
-﻿# Large-Scale Personalized Recommendation Engine
+# Large-Scale Personalized Recommendation Engine
 
 A personalized movie recommendation system built using MovieLens 25M, Python, item-based collaborative filtering, FastAPI, and React.
 
@@ -332,13 +332,15 @@ The API test suite checks health and home endpoints, recommendation responses, i
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/` | API home/status |
-| GET | `/health` | Health and artifact status |
+| GET | `/` | API home and status |
+| GET | `/health` | Artifact loading and training-data status |
 | GET | `/recommendations/popular?limit=10` | Popular movie recommendations |
 | GET | `/recommendations/movie/{movie_id}?limit=10` | Similar movies |
 | GET | `/recommendations/user/{user_id}?limit=10` | Personalized recommendations |
 
-Example requests:
+The optional `limit` parameter defaults to `10` and accepts values from `1` to `50`.
+
+### Example requests
 
 ```text
 GET http://127.0.0.1:8000/health
@@ -347,7 +349,45 @@ GET http://127.0.0.1:8000/recommendations/movie/318?limit=10
 GET http://127.0.0.1:8000/recommendations/user/1?limit=10
 ```
 
-The API validates recommendation limits and returns an error for unknown movie or user IDs.
+### Recommendation behavior
+
+- **Popular movies:** Ranked using the precomputed popularity baseline. Results include `rating_count`, `average_rating`, and `weighted_score`.
+- **Similar movies:** Returns related movies ordered by item similarity. Results include `similarity`.
+- **Personalized recommendations:** Uses the user's movies rated `4.0` or higher and combines item similarities weighted by the user's ratings. Results include `personalized_score` and `liked_movies_used`.
+- **Popularity fallback:** If the user has no ratings of `4.0` or higher, or no similarity candidates are available, the API falls back to popularity ranking and excludes movies already rated by that user.
+- **Seen-item exclusion:** Personalized recommendations exclude movies the user has already rated.
+- **Unknown IDs:** Unknown users and movies return HTTP `404`.
+- **Invalid limits:** Values outside `1` to `50` are rejected by API validation.
+
+### Example response fields
+
+A popular recommendation includes fields such as:
+
+```json
+{
+  "movieId": 318,
+  "title": "The Shawshank Redemption (1994)",
+  "genres": "Crime|Drama",
+  "rating_count": 75362,
+  "average_rating": 4.418,
+  "weighted_score": 4.418
+}
+```
+
+A personalized recommendation includes fields such as:
+
+```json
+{
+  "movieId": 4226,
+  "title": "Memento (2000)",
+  "genres": "Mystery|Thriller",
+  "personalized_score": 4.1816
+}
+```
+
+Similar-movie responses include a `similarity` score. Exact scores depend on the generated recommendation artifacts.
+
+Open `http://127.0.0.1:8000/docs` while the backend is running to explore the interactive API documentation.
 
 ## Limitations and Future Work
 

@@ -1,6 +1,6 @@
 
 from pathlib import Path
-from functools import lru_cache
+import sqlite3
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
@@ -12,21 +12,13 @@ from fastapi import FastAPI, HTTPException, Query
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-SIMILARITY_FILE = (
-    PROJECT_ROOT / "ml" / "artifacts" / "item_similarity_topk.csv"
-)
-
-POPULARITY_FILE = (
-    PROJECT_ROOT / "ml" / "artifacts" / "popularity_ranking.csv"
-)
-
-TRAIN_FILE = (
-    PROJECT_ROOT / "data" / "processed" / "train.csv.gz"
-)
+SIMILARITY_FILE = PROJECT_ROOT / "ml" / "artifacts" / "item_similarity_topk.csv"
+POPULARITY_FILE = PROJECT_ROOT / "ml" / "artifacts" / "popularity_ranking.csv"
+DATABASE_FILE = PROJECT_ROOT / "data" / "processed" / "ratings.db"
 
 
 # --------------------------------------------------
-# 2. Initialize FastAPI BEFORE declaring endpoints
+# 2. FastAPI application
 # --------------------------------------------------
 
 app = FastAPI(
@@ -53,34 +45,43 @@ similarity_df = pd.read_csv(SIMILARITY_FILE)
 popularity_df = pd.read_csv(POPULARITY_FILE)
 
 similarity_df["movieId"] = similarity_df["movieId"].astype(int)
-similarity_df["similarMovieId"] = (
-    similarity_df["similarMovieId"].astype(int)
-)
+similarity_df["similarMovieId"] = similarity_df["similarMovieId"].astype(int)
 popularity_df["movieId"] = popularity_df["movieId"].astype(int)
 
 movie_info = popularity_df.set_index("movieId").to_dict("index")
 
 
 # --------------------------------------------------
-# 4. Load training ratings once, on first user request
+# 4. Fetch only one user's ratings from SQLite
 # --------------------------------------------------
 
-@lru_cache(maxsize=1)
-def load_user_histories():
-    if not TRAIN_FILE.exists():
+def load_user_histories(user_id: int) -> pd.DataFrame:
+    if not DATABASE_FILE.exists():
         raise FileNotFoundError(
-            f"Training data not found: {TRAIN_FILE}"
+            f"Ratings database not found: {DATABASE_FILE}"
         )
 
-    return pd.read_csv(
-        TRAIN_FILE,
-        usecols=["userId", "movieId", "rating"],
-        dtype={
-            "userId": "int32",
-            "movieId": "int32",
-            "rating": "float32",
-        },
-    )
+    try:
+        with sqlite3.connect(DATABASE_FILE, timeout=10) as connection:
+            ratings = pd.read_sql_query(
+                """
+                SELECT movieId, rating
+                FROM ratings
+                WHERE userId = ?
+                """,
+                connection,
+                params=(user_id,),
+            )
+
+    except sqlite3.Error as exc:
+        raise RuntimeError(
+            f"Unable to read ratings database: {exc}"
+        ) from exc
+
+    ratings["movieId"] = ratings["movieId"].astype("int32")
+    ratings["rating"] = ratings["rating"].astype("float32")
+
+    return ratings
 
 
 # --------------------------------------------------
@@ -102,7 +103,7 @@ def health_check():
         "status": "healthy",
         "similarity_artifact_loaded": not similarity_df.empty,
         "movie_catalog_loaded": not popularity_df.empty,
-        "training_data_exists": TRAIN_FILE.exists(),
+        "training_data_exists": DATABASE_FILE.exists(),
     }
 
 
@@ -121,9 +122,11 @@ def recommend_similar_movies(
             detail="Movie not found in the recommendation catalog",
         )
 
-    matches = similarity_df[
-        similarity_df["movieId"] == movie_id
-    ].sort_values("similarity", ascending=False).head(limit)
+    matches = (
+        similarity_df[similarity_df["movieId"] == movie_id]
+        .sort_values("similarity", ascending=False)
+        .head(limit)
+    )
 
     recommendations = []
 
@@ -170,12 +173,8 @@ def popular_movies(
                 "title": row.title,
                 "genres": row.genres,
                 "rating_count": int(row.rating_count),
-                "average_rating": round(
-                    float(row.average_rating), 3
-                ),
-                "weighted_score": round(
-                    float(row.weighted_score), 3
-                ),
+                "average_rating": round(float(row.average_rating), 3),
+                "weighted_score": round(float(row.weighted_score), 3),
             }
             for row in movies.itertuples(index=False)
         ],
@@ -191,22 +190,22 @@ def recommend_for_user(
     user_id: int,
     limit: int = Query(default=10, ge=1, le=50),
 ):
-    ratings = load_user_histories()
+    try:
+        ratings = load_user_histories(user_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    user_ratings = ratings[ratings["userId"] == user_id]
-
-    if user_ratings.empty:
+    if ratings.empty:
         raise HTTPException(
             status_code=404,
             detail="User not found in training data",
         )
 
-    seen_movies = set(user_ratings["movieId"].tolist())
+    seen_movies = set(ratings["movieId"].tolist())
 
-    liked_ratings = user_ratings[
-        user_ratings["rating"] >= 4.0
-    ]
-
+    liked_ratings = ratings[ratings["rating"] >= 4.0]
     liked_movies = liked_ratings["movieId"].tolist()
 
     # Popularity fallback if the user has no highly rated movies.
@@ -220,9 +219,7 @@ def recommend_for_user(
                 "movieId": int(row.movieId),
                 "title": row.title,
                 "genres": row.genres,
-                "weighted_score": round(
-                    float(row.weighted_score), 3
-                ),
+                "weighted_score": round(float(row.weighted_score), 3),
             }
             for row in fallback.itertuples(index=False)
         ]
@@ -251,9 +248,7 @@ def recommend_for_user(
                 "movieId": int(row.movieId),
                 "title": row.title,
                 "genres": row.genres,
-                "weighted_score": round(
-                    float(row.weighted_score), 3
-                ),
+                "weighted_score": round(float(row.weighted_score), 3),
             }
             for row in fallback.itertuples(index=False)
         ]
@@ -265,7 +260,7 @@ def recommend_for_user(
             "recommendations": recommendations,
         }
 
-    # Weight similarity by how highly the user rated each source movie.
+    # Weight similarity by the user's rating.
     rating_lookup = (
         liked_ratings.set_index("movieId")["rating"].to_dict()
     )
@@ -275,18 +270,17 @@ def recommend_for_user(
     ).clip(lower=0.1)
 
     candidates["personalized_score"] = (
-        candidates["similarity"]
-        * candidates["user_preference"]
+        candidates["similarity"] * candidates["user_preference"]
     )
 
-    # Combine scores contributed by multiple liked movies.
+    # Combine scores from multiple liked movies.
     scores = (
         candidates.groupby("similarMovieId")["personalized_score"]
         .sum()
         .sort_values(ascending=False)
     )
 
-    # Exclude every movie the user has already rated.
+    # Exclude every movie already rated by the user.
     scores = scores[~scores.index.isin(seen_movies)]
 
     recommendations = []
