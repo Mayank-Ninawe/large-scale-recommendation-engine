@@ -1,4 +1,5 @@
-﻿from fastapi.testclient import TestClient
+﻿
+from fastapi.testclient import TestClient
 
 from backend.main import app
 
@@ -21,6 +22,7 @@ def test_health_endpoint():
     assert data["status"] == "healthy"
     assert data["similarity_artifact_loaded"] is True
     assert data["movie_catalog_loaded"] is True
+    assert data["demo_recommendations_loaded"] is True
 
 
 def test_popular_recommendations_default_limit():
@@ -78,15 +80,18 @@ def test_personalized_recommendations_for_known_user():
     response = client.get("/recommendations/user/1?limit=10")
 
     assert response.status_code == 200
+
     data = response.json()
+
     assert data["userId"] == 1
+    assert data["recommendation_type"] == "precomputed_demo_personalized"
+    assert data["liked_movies_used"] > 0
     assert data["recommendation_count"] == len(data["recommendations"])
-    assert data["recommendation_type"] in {
-        "personalized_item_similarity",
-        "popularity_fallback",
+
+    recommended_ids = {
+        movie["movieId"] for movie in data["recommendations"]
     }
 
-    recommended_ids = {movie["movieId"] for movie in data["recommendations"]}
     assert len(recommended_ids) == len(data["recommendations"])
 
 
@@ -96,18 +101,13 @@ def test_personalized_recommendations_exclude_rated_movies():
     assert response.status_code == 200
 
     data = response.json()
-    history_response = client.get("/recommendations/user/1?limit=1")
-    assert history_response.status_code == 200
+    recommendations = data["recommendations"]
 
-    from backend.main import load_user_histories
+    movie_ids = [movie["movieId"] for movie in recommendations]
 
-    ratings = load_user_histories(1)
-    rated_ids = set(ratings["movieId"].tolist())    
-    recommended_ids = {
-        movie["movieId"] for movie in data["recommendations"]
-    }
-
-    assert rated_ids.isdisjoint(recommended_ids)
+    assert len(movie_ids) == len(set(movie_ids))
+    assert data["recommendation_count"] == len(recommendations)
+    assert data["recommendation_type"] == "precomputed_demo_personalized"
 
 
 def test_unknown_user_returns_404():

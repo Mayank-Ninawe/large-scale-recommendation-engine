@@ -1,0 +1,206 @@
+﻿{
+    "2":  {
+              "userId":  2,
+              "recommendation_type":  "personalized_item_similarity",
+              "liked_movies_used":  96,
+              "recommendation_count":  10,
+              "recommendations":  [
+                                      {
+                                          "movieId":  6377,
+                                          "title":  "Finding Nemo (2003)",
+                                          "genres":  "Adventure|Animation|Children|Comedy",
+                                          "personalized_score":  14.6217
+                                      },
+                                      {
+                                          "movieId":  2959,
+                                          "title":  "Fight Club (1999)",
+                                          "genres":  "Action|Crime|Drama|Thriller",
+                                          "personalized_score":  11.5566
+                                      },
+                                      {
+                                          "movieId":  1240,
+                                          "title":  "Terminator, The (1984)",
+                                          "genres":  "Action|Sci-Fi|Thriller",
+                                          "personalized_score":  11.0807
+                                      },
+                                      {
+                                          "movieId":  1036,
+                                          "title":  "Die Hard (1988)",
+                                          "genres":  "Action|Crime|Thriller",
+                                          "personalized_score":  10.8167
+                                      },
+                                      {
+                                          "movieId":  1200,
+                                          "title":  "Aliens (1986)",
+                                          "genres":  "Action|Adventure|Horror|Sci-Fi",
+                                          "personalized_score":  8.6416
+                                      },
+                                      {
+                                          "movieId":  1214,
+                                          "title":  "Alien (1979)",
+                                          "genres":  "Horror|Sci-Fi",
+                                          "personalized_score":  8.1618
+                                      },
+                                      {
+                                          "movieId":  4226,
+                                          "title":  "Memento (2000)",
+                                          "genres":  "Mystery|Thriller",
+                                          "personalized_score":  8.154
+                                      },
+                                      {
+                                          "movieId":  1704,
+                                          "title":  "Good Will Hunting (1997)",
+                                          "genres":  "Drama|Romance",
+                                          "personalized_score":  7.6437
+                                      },
+                                      {
+                                          "movieId":  296,
+                                          "title":  "Pulp Fiction (1994)",
+                                          "genres":  "Comedy|Crime|Drama|Thriller",
+                                          "personalized_score":  7.4494
+                                      },
+                                      {
+                                          "movieId":  593,
+                                          "title":  "Silence of the Lambs, The (1991)",
+                                          "genres":  "Crime|Horror|Thriller",
+                                          "personalized_score":  6.8717
+                                      }
+                                  ]
+          },
+    "1":  {
+              "userId":  1,
+              "recommendation_type":  "personalized_item_similarity",
+              "liked_movies_used":  30,
+              "recommendation_count":  10,
+              "recommendations":  [
+                                      {
+                                          "movieId":  4226,
+                                          "title":  "Memento (2000)",
+                                          "genres":  "Mystery|Thriller",
+                                          "personalized_score":  4.1816
+                                      },
+                                      {
+                                          "movieId":  2959,
+                                          "title":  "Fight Club (1999)",
+                                          "genres":  "Action|Crime|Drama|Thriller",
+                                          "personalized_score":  4.1735
+                                      },
+                                      {
+                                          "movieId":  2858,
+                                          "title":  "American Beauty (1999)",
+                                          "genres":  "Drama|Romance",
+                                          "personalized_score":  3.5243
+                                      },
+                                      {
+                                          "movieId":  6874,
+                                          "title":  "Kill Bill: Vol. 1 (2003)",
+                                          "genres":  "Action|Crime|Thriller",
+                                          "personalized_score":  3.2838
+                                      },
+                                      {
+                                          "movieId":  7361,
+                                          "title":  "Eternal Sunshine of the Spotless Mind (2004)",
+                                          "genres":  "Drama|Romance|Sci-Fi",
+                                          "personalized_score":  3.0066
+                                      },
+                                      {
+                                          "movieId":  2571,
+                                          "title":  "Matrix, The (1999)",
+                                          "genres":  "Action|Sci-Fi|Thriller",
+                                          "personalized_score":  2.9777
+                                      },
+                                      {
+                                          "movieId":  8195,
+                                          "title":  "Avventura, L\u0027 (Adventure, The) (1960)",
+                                          "genres":  "Drama|Mystery|Romance",
+                                          "personalized_score":  2.5305
+                                      },
+                                      {
+                                          "movieId":  296,
+                                          "title":  "Pulp Fiction (1994)",
+                                          "genres":  "Comedy|Crime|Drama|Thriller",
+                                          "personalized_score":  2.4092
+                                      },
+                                      {
+                                          "movieId":  1251,
+                                          "title":  "8 1/2 (8Â½) (1963)",
+                                          "genres":  "Drama|Fantasy",
+                                          "personalized_score":  2.398
+                                      },
+                                      {
+                                          "movieId":  2731,
+                                          "title":  "400 Blows, The (Les quatre cents coups) (1959)",
+                                          "genres":  "Crime|Drama",
+                                          "personalized_score":  2.2792
+                                      }
+                                  ]
+          },
+    "3":  {
+              "userId":  3,
+              "recommendation_type":  "personalized_item_similarity",
+              "liked_movies_used":  316,
+              "recommendation_count":  10,
+              "recommendations":  [
+                                      {
+                                          "movieId":  608,
+                                          "title":  "Fargo (1996)",
+                                          "genres":  "Comedy|Crime|Drama|Thriller",
+                                          "personalized_score":  11.6178
+                                      },
+                                      {
+                                          "movieId":  47,
+                                          "title":  "Seven (a.k.a. Se7en) (1995)",
+                                          "genres":  "Mystery|Thriller",
+                                          "personalized_score":  10.6588
+                                      },
+                                      {
+                                          "movieId":  68954,
+                                          "title":  "Up (2009)",
+                                          "genres":  "Adventure|Animation|Children|Drama",
+                                          "personalized_score":  9.4113
+                                      },
+                                      {
+                                          "movieId":  750,
+                                          "title":  "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)",
+                                          "genres":  "Comedy|War",
+                                          "personalized_score":  9.2822
+                                      },
+                                      {
+                                          "movieId":  1193,
+                                          "title":  "One Flew Over the Cuckoo\u0027s Nest (1975)",
+                                          "genres":  "Drama",
+                                          "personalized_score":  8.9615
+                                      },
+                                      {
+                                          "movieId":  4878,
+                                          "title":  "Donnie Darko (2001)",
+                                          "genres":  "Drama|Mystery|Sci-Fi|Thriller",
+                                          "personalized_score":  8.4731
+                                      },
+                                      {
+                                          "movieId":  2762,
+                                          "title":  "Sixth Sense, The (1999)",
+                                          "genres":  "Drama|Horror|Mystery",
+                                          "personalized_score":  7.1895
+                                      },
+                                      {
+                                          "movieId":  2028,
+                                          "title":  "Saving Private Ryan (1998)",
+                                          "genres":  "Action|Drama|War",
+                                          "personalized_score":  6.8982
+                                      },
+                                      {
+                                          "movieId":  1136,
+                                          "title":  "Monty Python and the Holy Grail (1975)",
+                                          "genres":  "Adventure|Comedy|Fantasy",
+                                          "personalized_score":  6.572
+                                      },
+                                      {
+                                          "movieId":  88140,
+                                          "title":  "Captain America: The First Avenger (2011)",
+                                          "genres":  "Action|Adventure|Sci-Fi|Thriller|War",
+                                          "personalized_score":  6.1491
+                                      }
+                                  ]
+          }
+}
