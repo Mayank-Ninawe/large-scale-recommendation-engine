@@ -1,12 +1,19 @@
 # Large-Scale Personalized Recommendation Engine
 
-A personalized movie recommendation system built using MovieLens 25M, Python, item-based collaborative filtering, FastAPI, and React.
+A movie recommendation system built using the MovieLens 25M dataset, Python, item-based collaborative filtering, FastAPI, and React.
 
-The current implementation includes a popularity-based baseline, item-similarity retrieval, offline evaluation, a REST API, and an interactive React frontend.
+The project explores popularity-based recommendation, item-similarity retrieval, offline ranking evaluation, REST API development, and an interactive web application.
+
+<p align="center">
+  <a href="https://large-scale-recommendation-engine.vercel.app/"><strong>Live Demo</strong></a> ·
+  <a href="https://recommendation-engine-api.onrender.com/docs"><strong>API Documentation</strong></a> ·
+  <a href="https://github.com/Mayank-Ninawe/large-scale-recommendation-engine"><strong>GitHub Repository</strong></a>
+</p>
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Live Deployment](#live-deployment)
 - [Current Features](#current-features)
 - [Architecture](#architecture)
 - [Dataset](#dataset)
@@ -20,52 +27,94 @@ The current implementation includes a popularity-based baseline, item-similarity
 - [Run the Frontend](#run-the-frontend)
 - [Run Tests](#run-tests)
 - [API Endpoints](#api-endpoints)
-- [Limitations and Future Work](#limitations-and-future-work)
+- [Current Limitations and Future Work](#current-limitations-and-future-work)
+- [License and Dataset Attribution](#license-and-dataset-attribution)
 
 ## Overview
 
-The goal is to build a scalable, personalized recommendation engine that suggests movies using users' historical ratings and item-to-item similarities.
+The goal of this project is to explore how recommendation systems can use historical user ratings and item-to-item similarities to suggest relevant movies.
 
-The current system uses item-based collaborative filtering to generate personalized recommendations and compares its offline ranking quality against a popularity-based baseline.
+The project includes a popularity-based baseline and an item-based collaborative filtering implementation, with offline ranking evaluation comparing their recommendation quality.
+
+The deployed application provides three recommendation experiences:
+
+1. Popular movie recommendations.
+2. Similar-movie recommendations based on a selected movie.
+3. Precomputed personalized demo recommendations for selected users.
+
+The application uses a React frontend connected to a FastAPI backend.
+
+## Live Deployment
+
+The application is deployed using Vercel and Render.
+
+| Component | Platform | URL |
+|---|---|---|
+| Frontend | Vercel | https://large-scale-recommendation-engine.vercel.app/ |
+| Backend API | Render | https://recommendation-engine-api.onrender.com/ |
+| Interactive API Documentation | FastAPI Swagger UI | https://recommendation-engine-api.onrender.com/docs |
+| API Health Check | Render | https://recommendation-engine-api.onrender.com/health |
+
+**Deployment architecture:**
+
+- React frontend hosted on Vercel.
+- FastAPI backend hosted on Render.
+- Vercel rewrites `/api/*` requests to the Render backend.
+- Recommendation artifacts are loaded by the backend.
+
+Note: Render's free web service may sleep after inactivity. The first request after a period of inactivity can take longer.
 
 ## Current Features
 
 - MovieLens 25M dataset auditing and validation.
 - Chronological training, validation, and test split.
 - Popularity-based recommendation baseline with Bayesian smoothing.
-- Item-based collaborative filtering using positive user ratings.
+- Item-based collaborative filtering using positive user ratings in the offline pipeline.
 - Top-K similar-movie artifact generation.
 - Offline Recall@10 and NDCG@10 evaluation.
-- FastAPI endpoints for popular, similar-movie, and personalized recommendations.
-- React and Vite frontend for interactive personalized recommendations.
+- FastAPI endpoints for popular, similar-movie, and personalized demo recommendations.
+- React and Vite frontend for interactive movie recommendations.
+- Precomputed personalized demo recommendations for user IDs 1, 2, and 3.
 - Automated API tests using pytest.
+- Live frontend and backend deployment.
 
 ## Architecture
 
 ```text
-MovieLens 25M
-     |
-     v
-Dataset Audit and Temporal Split
-     |
-     +-----------------------------+
-     |                             |
-     v                             v
-Popularity Baseline       Item Similarity Model
-     |                             |
-     v                             v
-Popularity Ranking        Top-K Similar-Movie Artifact
-     |                             |
-     +--------------+--------------+
-                    |
-                    v
-              FastAPI Backend
-                    |
-                    v
-             React + Vite UI
+                    MovieLens 25M
+                         |
+                         v
+               Dataset Audit and
+                Temporal Split
+                         |
+             +-----------+-----------+
+             |                       |
+             v                       v
+      Popularity Baseline     Item Similarity Model
+             |                       |
+             v                       v
+      Popularity Ranking       Top-K Similar-Movie
+             |                    Artifact
+             |                       |
+             +-----------+-----------+
+                         |
+                         v
+                  Recommendation
+                     Artifacts
+                         |
+                         v
+                   FastAPI Backend
+                         |
+                         v
+                  Vercel API Rewrite
+                         |
+                         v
+                  React + Vite UI
 ```
 
-The current item-based collaborative filtering implementation uses historical user ratings to find related movies. The API combines item similarities with a user's positive rating history and excludes movies already rated by that user.
+The offline item-based collaborative filtering pipeline uses historical user ratings to calculate item similarities and generate recommendation artifacts.
+
+The deployed API serves recommendations from these precomputed artifacts. The personalized demo endpoint currently serves precomputed recommendations for selected user IDs rather than dynamically generating recommendations from a live user-rating database.
 
 ## Dataset
 
@@ -96,7 +145,9 @@ Download MovieLens 25M from the official source:
 
 https://grouplens.org/datasets/movielens/25m/
 
-Extract the dataset so that the raw files are available under `data/raw/ml-25m/`. Do not commit the full dataset to Git.
+Extract the dataset so that the raw files are available under `data/raw/ml-25m/`.
+
+Do not commit the full dataset to Git.
 
 ## Evaluation Results
 
@@ -124,12 +175,14 @@ A separate popularity evaluation report uses a different protocol and cohort. It
 
 - Python
 - Pandas and NumPy
-- scikit-learn / SciPy dependencies
 - FastAPI
 - Uvicorn
 - React
 - Vite
 - pytest
+- Git and GitHub
+- Vercel
+- Render
 
 ### Planned or not yet verified as implemented
 
@@ -159,7 +212,8 @@ large-scale-recommendation-engine/
 ├── frontend/
 │   ├── src/
 │   ├── package.json
-│   └── vite.config.js
+│   ├── vite.config.js
+│   └── vercel.json
 ├── infra/
 ├── ml/
 │   ├── evaluation/
@@ -170,6 +224,9 @@ large-scale-recommendation-engine/
 │   │   ├── item_similarity.py
 │   │   └── popularity_baseline.py
 │   └── artifacts/
+│       ├── item_similarity_topk.csv
+│       ├── popularity_ranking.csv
+│       └── demo_recommendations.json
 ├── scripts/
 │   ├── audit_dataset.py
 │   ├── prepare_dataset.py
@@ -181,7 +238,7 @@ large-scale-recommendation-engine/
 └── README.md
 ```
 
-Generated data and model artifacts may be excluded from Git. Generate them locally before starting the backend.
+Generated data and model artifacts may be excluded from Git depending on their size. The deployed backend requires the three recommendation artifacts listed above to be available.
 
 ## Setup and Installation
 
@@ -194,7 +251,15 @@ Generated data and model artifacts may be excluded from Git. Generate them local
 
 Run commands from the repository root in PowerShell.
 
-### 1. Create and activate a virtual environment
+### 1. Clone the repository
+
+```powershell
+git clone https://github.com/Mayank-Ninawe/large-scale-recommendation-engine.git
+
+cd large-scale-recommendation-engine
+```
+
+### 2. Create and activate a virtual environment
 
 ```powershell
 py -3.10 -m venv .venv
@@ -203,7 +268,7 @@ py -3.10 -m venv .venv
 
 If PowerShell blocks activation, invoke the environment's Python executable directly instead.
 
-### 2. Install dependencies
+### 3. Install dependencies
 
 For application dependencies:
 
@@ -217,7 +282,7 @@ For development and testing:
 python -m pip install -r requirements-dev.txt
 ```
 
-### 3. Install frontend dependencies
+### 4. Install frontend dependencies
 
 ```powershell
 npm --prefix .\frontend install
@@ -269,6 +334,9 @@ The backend expects these artifacts:
 
 - `ml/artifacts/popularity_ranking.csv`
 - `ml/artifacts/item_similarity_topk.csv`
+- `ml/artifacts/demo_recommendations.json`
+
+The demo JSON contains precomputed recommendation responses for user IDs 1, 2, and 3.
 
 ### 3. Evaluate the models
 
@@ -282,19 +350,19 @@ Evaluation reports are written under `data/reports/` by the respective scripts.
 
 ## Run the Backend
 
-Ensure the dataset and both required recommendation artifacts exist.
+Ensure the three required recommendation artifacts exist.
 
 Start FastAPI from the repository root:
 
 ```powershell
-python -m uvicorn backend.main:app --reload
+python -m uvicorn backend.main:app --reload --port 8001
 ```
 
-The API is available at:
+The local API is available at:
 
-- Base URL: `http://127.0.0.1:8000`
-- Interactive API documentation: `http://127.0.0.1:8000/docs`
-- Health check: `http://127.0.0.1:8000/health`
+- Base URL: http://127.0.0.1:8001/
+- Interactive API documentation: http://127.0.0.1:8001/docs
+- Health check: http://127.0.0.1:8001/health
 
 Keep this terminal running while using the frontend.
 
@@ -308,9 +376,9 @@ npm --prefix .\frontend run dev
 
 Open the local URL printed by Vite, usually:
 
-`http://localhost:5173`
+http://localhost:5173
 
-The Vite development server proxies `/api` requests to the local FastAPI server on port 8000.
+The Vite development server proxies `/api` requests to the local FastAPI server on port 8001.
 
 To create a production build:
 
@@ -323,40 +391,41 @@ npm --prefix .\frontend run build
 Install development dependencies, then run:
 
 ```powershell
-python -m pytest -v
+python -m pytest tests\test_api.py -v
 ```
 
-The API test suite checks health and home endpoints, recommendation responses, input limits, unknown IDs, and exclusion of previously rated movies.
+The API test suite currently contains 12 tests covering home and health endpoints, recommendation responses, input limits, known and unknown IDs, and personalized demo behavior.
 
 ## API Endpoints
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | GET | `/` | API home and status |
-| GET | `/health` | Artifact loading and training-data status |
+| GET | `/health` | Health check and artifact loading status |
 | GET | `/recommendations/popular?limit=10` | Popular movie recommendations |
 | GET | `/recommendations/movie/{movie_id}?limit=10` | Similar movies |
-| GET | `/recommendations/user/{user_id}?limit=10` | Personalized recommendations |
+| GET | `/recommendations/user/{user_id}?limit=10` | Precomputed personalized demo recommendations |
 
 The optional `limit` parameter defaults to `10` and accepts values from `1` to `50`.
 
 ### Example requests
 
 ```text
-GET http://127.0.0.1:8000/health
-GET http://127.0.0.1:8000/recommendations/popular?limit=10
-GET http://127.0.0.1:8000/recommendations/movie/318?limit=10
-GET http://127.0.0.1:8000/recommendations/user/1?limit=10
+GET https://recommendation-engine-api.onrender.com/health
+
+GET https://recommendation-engine-api.onrender.com/recommendations/popular?limit=10
+
+GET https://recommendation-engine-api.onrender.com/recommendations/movie/318?limit=10
+
+GET https://recommendation-engine-api.onrender.com/recommendations/user/1?limit=10
 ```
 
 ### Recommendation behavior
 
 - **Popular movies:** Ranked using the precomputed popularity baseline. Results include `rating_count`, `average_rating`, and `weighted_score`.
 - **Similar movies:** Returns related movies ordered by item similarity. Results include `similarity`.
-- **Personalized recommendations:** Uses the user's movies rated `4.0` or higher and combines item similarities weighted by the user's ratings. Results include `personalized_score` and `liked_movies_used`.
-- **Popularity fallback:** If the user has no ratings of `4.0` or higher, or no similarity candidates are available, the API falls back to popularity ranking and excludes movies already rated by that user.
-- **Seen-item exclusion:** Personalized recommendations exclude movies the user has already rated.
-- **Unknown IDs:** Unknown users and movies return HTTP `404`.
+- **Personalized demo recommendations:** Returns precomputed recommendations for user IDs `1`, `2`, and `3`. Results include `personalized_score` and `liked_movies_used`.
+- **Unknown IDs:** Unknown movies and unsupported demo user IDs return HTTP `404`.
 - **Invalid limits:** Values outside `1` to `50` are rejected by API validation.
 
 ### Example response fields
@@ -374,7 +443,7 @@ A popular recommendation includes fields such as:
 }
 ```
 
-A personalized recommendation includes fields such as:
+A personalized demo recommendation includes fields such as:
 
 ```json
 {
@@ -387,21 +456,30 @@ A personalized recommendation includes fields such as:
 
 Similar-movie responses include a `similarity` score. Exact scores depend on the generated recommendation artifacts.
 
-Open `http://127.0.0.1:8000/docs` while the backend is running to explore the interactive API documentation.
+Open the interactive API documentation to explore the available endpoints:
 
-## Limitations and Future Work
+https://recommendation-engine-api.onrender.com/docs
 
-The current implementation is a working baseline-oriented recommendation system. It is not yet the complete neural two-stage architecture originally envisioned.
+## Current Limitations and Future Work
+
+The current implementation is a working recommendation-system baseline with a deployed web application. It is not yet the complete neural two-stage architecture originally envisioned.
+
+Current limitations:
+
+1. Personalized recommendations are currently precomputed for demo user IDs `1`, `2`, and `3`.
+2. The deployed personalized endpoint does not dynamically calculate recommendations for arbitrary users.
+3. The API serves precomputed recommendation artifacts rather than running a continuously updated training or inference pipeline.
+4. The deployed implementation does not yet include the planned Two-Tower retrieval model, FAISS vector index, or deep-learning ranking model.
 
 Potential next steps:
 
-1. Add a Two-Tower retrieval model and evaluate it against item-based retrieval.
-2. Integrate FAISS if vector retrieval is implemented and benchmarked.
-3. Add a learned ranking model such as DCN and compare it using the same evaluation protocol.
-4. Add Redis caching and measure its effect on latency.
-5. Add reproducible Docker deployment and workflow orchestration.
-6. Expand monitoring, API observability, and frontend evaluation views.
-7. Run additional robustness and performance tests.
+1. Implement dynamic user-based recommendation generation.
+2. Add a Two-Tower retrieval model and evaluate it against item-based retrieval.
+3. Integrate FAISS for approximate nearest-neighbor retrieval and benchmark it.
+4. Add a learned ranking model such as DCN and compare it using the same evaluation protocol.
+5. Add Redis caching and measure its effect on latency.
+6. Add reproducible Docker deployment and workflow orchestration.
+7. Expand monitoring, API observability, and performance testing.
 
 Advanced components should be described as completed only after their implementation and results have been verified.
 
