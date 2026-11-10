@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import json
+import sqlite3
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
@@ -23,6 +24,8 @@ POPULARITY_FILE = (
 DEMO_RECOMMENDATIONS_FILE = (
     PROJECT_ROOT / "ml" / "artifacts" / "demo_recommendations.json"
 )
+
+RATINGS_DB_FILE = PROJECT_ROOT / "data" / "processed" / "ratings.db"
 
 
 # --------------------------------------------------
@@ -47,6 +50,7 @@ for file_path in [
     SIMILARITY_FILE,
     POPULARITY_FILE,
     DEMO_RECOMMENDATIONS_FILE,
+    RATINGS_DB_FILE,
 ]:
     if not file_path.exists():
         raise FileNotFoundError(
@@ -63,6 +67,11 @@ with open(
     encoding="utf-8-sig",
 ) as file:
     demo_recommendations = json.load(file)
+
+similarity_lookup = {
+    int(movie_id): group[["similarMovieId", "similarity"]].to_dict("records")
+    for movie_id, group in similarity_df.groupby("movieId")
+}
 
 
 # --------------------------------------------------
@@ -99,6 +108,7 @@ def health_check():
         "similarity_artifact_loaded": not similarity_df.empty,
         "movie_catalog_loaded": not popularity_df.empty,
         "demo_recommendations_loaded": bool(demo_recommendations),
+        "ratings_database_loaded": RATINGS_DB_FILE.exists(),
     }
 
 
@@ -187,21 +197,73 @@ def recommend_for_user(
 ):
     user_data = demo_recommendations.get(str(user_id))
 
-    if user_data is None:
+    if user_data is not None:
+        recommendations = user_data["recommendations"][:limit]
+
+        return {
+            "userId": user_id,
+            "recommendation_type": "precomputed_demo_personalized",
+            "liked_movies_used": user_data.get("liked_movies_used", 0),
+            "recommendation_count": len(recommendations),
+            "recommendations": recommendations,
+        }
+
+    with sqlite3.connect(RATINGS_DB_FILE) as connection:
+        ratings = connection.execute(
+            "SELECT movieId, rating FROM ratings WHERE userId = ?",
+            (user_id,),
+        ).fetchall()
+
+    if not ratings:
         raise HTTPException(
             status_code=404,
             detail=(
-                "Demo recommendations unavailable for this user. "
-                "Try user ID 1, 2, or 3."
+                "User not found in the training ratings. "
+                "Try a MovieLens user ID between 1 and 162541."
             ),
         )
 
-    recommendations = user_data["recommendations"][:limit]
+    rated_movie_ids = {int(movie_id) for movie_id, _ in ratings}
+    positive_ratings = [
+        (int(movie_id), float(rating))
+        for movie_id, rating in ratings
+        if rating >= 4.0
+    ]
+    candidate_scores = {}
+
+    for movie_id, rating in positive_ratings:
+        for match in similarity_lookup.get(movie_id, []):
+            candidate_id = int(match["similarMovieId"])
+            if candidate_id in rated_movie_ids:
+                continue
+            score = float(match["similarity"]) * (rating - 3.0)
+            candidate_scores[candidate_id] = (
+                candidate_scores.get(candidate_id, 0.0) + score
+            )
+
+    ranked_ids = sorted(
+        candidate_scores,
+        key=lambda candidate_id: (
+            candidate_scores[candidate_id],
+            float(movie_info[candidate_id].get("weighted_score", 0.0)),
+        ),
+        reverse=True,
+    )[:limit]
+
+    recommendations = [
+        {
+            "movieId": movie_id,
+            "title": movie_info[movie_id]["title"],
+            "genres": movie_info[movie_id]["genres"],
+            "personalized_score": round(candidate_scores[movie_id], 4),
+        }
+        for movie_id in ranked_ids
+    ]
 
     return {
         "userId": user_id,
-        "recommendation_type": "precomputed_demo_personalized",
-        "liked_movies_used": user_data.get("liked_movies_used", 0),
+        "recommendation_type": "item_similarity_personalized",
+        "liked_movies_used": len(positive_ratings),
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
     }

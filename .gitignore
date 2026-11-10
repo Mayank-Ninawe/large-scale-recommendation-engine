@@ -16,13 +16,15 @@ venv/
 # Data files
 data/raw/*
 data/processed/*
-data/reports/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/reports/.gitkeep
 
 # ML artifacts
 ml/artifacts/*
+!ml/artifacts/
+!ml/artifacts/*.csv
+!ml/artifacts/*.json
 *.pkl
 *.joblib
 *.h5
@@ -44,3 +46,10 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local temporary backups and one-off scripts
+*~
+*.tmp
+*.temp
+backup-*/
+*.before-*

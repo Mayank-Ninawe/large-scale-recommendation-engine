@@ -110,6 +110,17 @@ def test_personalized_recommendations_exclude_rated_movies():
     assert data["recommendation_type"] == "precomputed_demo_personalized"
 
 
+def test_personalized_recommendations_for_non_demo_user():
+    response = client.get("/recommendations/user/4?limit=10")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["userId"] == 4
+    assert data["recommendation_type"] == "item_similarity_personalized"
+    assert data["liked_movies_used"] > 0
+    assert data["recommendation_count"] == len(data["recommendations"])
+
+
 def test_unknown_user_returns_404():
     response = client.get("/recommendations/user/999999999")
 
