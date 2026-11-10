@@ -114,7 +114,9 @@ Note: Render's free web service may sleep after inactivity. The first request af
 
 The offline item-based collaborative filtering pipeline uses historical user ratings to calculate item similarities and generate recommendation artifacts.
 
-The deployed API serves recommendations from these precomputed artifacts. The personalized demo endpoint currently serves precomputed recommendations for selected user IDs rather than dynamically generating recommendations from a live user-rating database.
+The deployed API serves recommendations from these precomputed artifacts. Users
+1–3 use included precomputed profiles, while other valid MovieLens users are
+served dynamically from the local ratings database when it is available.
 
 ## Dataset
 
@@ -336,7 +338,11 @@ The backend expects these artifacts:
 - `ml/artifacts/item_similarity_topk.csv`
 - `ml/artifacts/demo_recommendations.json`
 
-The demo JSON contains precomputed recommendation responses for user IDs 1, 2, and 3.
+The curated artifacts are included in the repository. The raw MovieLens
+download, processed training files, and `data/processed/ratings.db` remain
+local-only because of their size and dataset terms. Generate the local ratings
+database and processed files before using dynamic recommendations for arbitrary
+users.
 
 ### 3. Evaluate the models
 
@@ -350,7 +356,7 @@ Evaluation reports are written under `data/reports/` by the respective scripts.
 
 ## Run the Backend
 
-Ensure the three required recommendation artifacts exist.
+Ensure the three recommendation artifacts and the local ratings database exist.
 
 Start FastAPI from the repository root:
 
@@ -394,7 +400,9 @@ Install development dependencies, then run:
 python -m pytest tests\test_api.py -v
 ```
 
-The API test suite currently contains 12 tests covering home and health endpoints, recommendation responses, input limits, known and unknown IDs, and personalized demo behavior.
+The API test suite covers home and health endpoints, recommendation responses,
+input limits, known and unknown IDs, demo profiles, and dynamic
+recommendations for non-demo users.
 
 ## API Endpoints
 
@@ -404,7 +412,7 @@ The API test suite currently contains 12 tests covering home and health endpoint
 | GET | `/health` | Health check and artifact loading status |
 | GET | `/recommendations/popular?limit=10` | Popular movie recommendations |
 | GET | `/recommendations/movie/{movie_id}?limit=10` | Similar movies |
-| GET | `/recommendations/user/{user_id}?limit=10` | Precomputed personalized demo recommendations |
+| GET | `/recommendations/user/{user_id}?limit=10` | Personalized recommendations |
 
 The optional `limit` parameter defaults to `10` and accepts values from `1` to `50`.
 
@@ -424,8 +432,9 @@ GET https://recommendation-engine-api.onrender.com/recommendations/user/1?limit=
 
 - **Popular movies:** Ranked using the precomputed popularity baseline. Results include `rating_count`, `average_rating`, and `weighted_score`.
 - **Similar movies:** Returns related movies ordered by item similarity. Results include `similarity`.
-- **Personalized demo recommendations:** Returns precomputed recommendations for user IDs `1`, `2`, and `3`. Results include `personalized_score` and `liked_movies_used`.
-- **Unknown IDs:** Unknown movies and unsupported demo user IDs return HTTP `404`.
+- **Personalized recommendations:** Users `1`, `2`, and `3` use included precomputed profiles. Other valid users use movies rated `4.0` or higher and item similarities weighted by their ratings. Results include `personalized_score` and `liked_movies_used`.
+- **Seen-item exclusion:** Dynamic recommendations exclude movies already rated by the user.
+- **Unknown IDs:** Unknown movies and users return HTTP `404`.
 - **Invalid limits:** Values outside `1` to `50` are rejected by API validation.
 
 ### Example response fields
@@ -443,7 +452,7 @@ A popular recommendation includes fields such as:
 }
 ```
 
-A personalized demo recommendation includes fields such as:
+A personalized recommendation includes fields such as:
 
 ```json
 {
@@ -466,10 +475,9 @@ The current implementation is a working recommendation-system baseline with a de
 
 Current limitations:
 
-1. Personalized recommendations are currently precomputed for demo user IDs `1`, `2`, and `3`.
-2. The deployed personalized endpoint does not dynamically calculate recommendations for arbitrary users.
-3. The API serves precomputed recommendation artifacts rather than running a continuously updated training or inference pipeline.
-4. The deployed implementation does not yet include the planned Two-Tower retrieval model, FAISS vector index, or deep-learning ranking model.
+1. The local ratings database is required for dynamic recommendations and is not committed because of its size.
+2. The API serves generated recommendation artifacts rather than running a continuously updated training or inference pipeline.
+3. The deployed implementation does not yet include the planned Two-Tower retrieval model, FAISS vector index, or deep-learning ranking model.
 
 Potential next steps:
 
